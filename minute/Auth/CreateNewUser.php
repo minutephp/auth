@@ -12,8 +12,8 @@ namespace Minute\Auth {
     use Minute\Event\UserSignupEvent;
     use Minute\Log\LoggerEx;
     use Minute\Model\ModelAutoFill;
-    use Minute\Routing\Router;
     use Minute\Tracker\Tracker;
+    use Minute\Password\PasswordHash;
 
     class CreateNewUser {
         /**
@@ -28,6 +28,10 @@ namespace Minute\Auth {
          * @var LoggerEx
          */
         private $logger;
+        /**
+         * @var PasswordHash
+         */
+        private $passwordHash;
 
         /**
          * LoginHandler constructor.
@@ -35,11 +39,13 @@ namespace Minute\Auth {
          * @param Dispatcher $dispatcher
          * @param ModelAutoFill $modelAutoFill
          * @param LoggerEx $logger
+         * @param PasswordHash $passwordHash
          */
-        public function __construct(Dispatcher $dispatcher, ModelAutoFill $modelAutoFill, LoggerEx $logger) {
+        public function __construct(Dispatcher $dispatcher, ModelAutoFill $modelAutoFill, LoggerEx $logger, PasswordHash $passwordHash) {
             $this->dispatcher    = $dispatcher;
             $this->modelAutoFill = $modelAutoFill;
             $this->logger        = $logger;
+            $this->passwordHash  = $passwordHash;
         }
 
         public function signup(UserSignupEvent $event) {
@@ -78,7 +84,7 @@ namespace Minute\Auth {
                 $signup[$field] = $event->$field ?? $default($field);
 
                 if ($field == 'password') {
-                    $signup[$field] = password_hash($signup[$field], PASSWORD_DEFAULT);
+                    $signup[$field] = $this->passwordHash->getHashedPassword($signup[$field]);
                 }
             }
 

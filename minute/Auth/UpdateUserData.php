@@ -13,6 +13,7 @@ namespace Minute\Auth {
     use Minute\Event\UserUpdateDataEvent;
     use Minute\Resolver\Resolver;
     use Minute\Session\Session;
+    use Minute\Password\PasswordHash;
 
     class UpdateUserData {
         /**
@@ -31,6 +32,10 @@ namespace Minute\Auth {
          * @var Resolver
          */
         private $resolver;
+        /**
+         * @var PasswordHash
+         */
+        private $passwordHash;
 
         /**
          * LoginHandler constructor.
@@ -39,12 +44,14 @@ namespace Minute\Auth {
          * @param Session $session
          * @param Database $database
          * @param Resolver $resolver
+         * @param PasswordHash $passwordHash
          */
-        public function __construct(Dispatcher $dispatcher, Session $session, Database $database, Resolver $resolver) {
-            $this->dispatcher = $dispatcher;
-            $this->session    = $session;
-            $this->database   = $database;
-            $this->resolver   = $resolver;
+        public function __construct(Dispatcher $dispatcher, Session $session, Database $database, Resolver $resolver, PasswordHash $passwordHash) {
+            $this->dispatcher   = $dispatcher;
+            $this->session      = $session;
+            $this->database     = $database;
+            $this->resolver     = $resolver;
+            $this->passwordHash = $passwordHash;
         }
 
         public function update(UserUpdateDataEvent $event) {
@@ -56,7 +63,7 @@ namespace Minute\Auth {
                     if (in_array($key, $fields)) {
                         if ($event->isOverwrite() || empty($user->$key) || (($key === 'verified') && ($value === 'true'))) {
                             $dataChanged = $dataChanged ?? ($user->$key !== $value);
-                            $user->$key  = $key === 'password' ? password_hash($value, PASSWORD_DEFAULT) : $value;
+                            $user->$key  = $key === 'password' ? $this->passwordHash->getHashedPassword($value) : $value;
                         }
                     } elseif (!empty($userDataModel)) {
                         /** @var MUserDatum $extra */
