@@ -2,8 +2,10 @@
 /**
  * Created by: MinutePHP framework
  */
+
 namespace App\Controller\Auth {
 
+    use App\Config\BootLoader;
     use App\Model\User;
     use Exception;
     use Hybrid_Auth;
@@ -32,6 +34,10 @@ namespace App\Controller\Auth {
          * @var Dispatcher
          */
         private $dispatcher;
+        /**
+         * @var BootLoader
+         */
+        private $bootLoader;
 
         /**
          * HAuth constructor.
@@ -40,12 +46,14 @@ namespace App\Controller\Auth {
          * @param SignupHandler $signupHandler
          * @param Session $session
          * @param Dispatcher $dispatcher
+         * @param BootLoader $bootLoader
          */
-        public function __construct(AuthProviders $providers, SignupHandler $signupHandler, Session $session, Dispatcher $dispatcher) {
+        public function __construct(AuthProviders $providers, SignupHandler $signupHandler, Session $session, Dispatcher $dispatcher, BootLoader $bootLoader) {
             $this->providers     = $providers;
             $this->signupHandler = $signupHandler;
             $this->session       = $session;
             $this->dispatcher    = $dispatcher;
+            $this->bootLoader    = $bootLoader;
         }
 
         /**
@@ -58,16 +66,25 @@ namespace App\Controller\Auth {
                 Hybrid_Endpoint::process();
             } else {
                 try {
-                    $map      = ['Facebook' => 'id', 'Google' => 'id', 'GitHub' => 'id'];
-                    $settings = ['Facebook' => ['scope' => 'email', 'display' => 'popup'], 'Google' => ['scope' => 'https://www.googleapis.com/auth/userinfo.email'],
-                                 'Twitter' => ['includeEmail' => true]];
-                    $config   = $this->providers->getProvider($provider);
+                    $map        = ['Facebook' => 'id', 'Google' => 'id', 'GitHub' => 'id'];
+                    $settings   = ['Facebook' => ['scope' => 'email', 'display' => 'popup'], 'Google' => ['scope' => 'https://www.googleapis.com/auth/userinfo.email'],
+                                   'Twitter' => ['includeEmail' => true], 'GitHub' => ['scope' => 'user:email', 'display' => 'popup']];
+                    $additional = ['GitHub', 'WordPress', 'Instagram', 'Paypal', 'DigitalOcean'];
+                    $config     = $this->providers->getProvider($provider);
 
                     if (!empty($config['key']) && !empty($config['secret'])) {
                         $pConfig = array_merge(['enabled' => true, "keys" => [$map[$provider] ?? 'key' => $config['key'], 'secret' => $config['secret']]], $settings[$provider] ?? []);
-                        $config  = ["providers" => [$provider => $pConfig]];
-                        $hauth   = new Hybrid_Auth($config);
-                        $auth    = $hauth->authenticate($provider);
+
+                        if (in_array($provider, $additional)) {
+                            $pConfig['wrapper'] = array(
+                                'class' => "Hybrid_Providers_$provider",
+                                'path' => $this->bootLoader->getBaseDir() . "/vendor/hybridauth/hybridauth/additional-providers/hybridauth-github/Providers/$provider.php"
+                            );
+                        }
+
+                        $config = ["providers" => [$provider => $pConfig]];
+                        $hauth  = new Hybrid_Auth($config);
+                        $auth   = $hauth->authenticate($provider);
 
                         if ($profile = $auth->getUserProfile()) {
                             $event = 'session_user_login';
