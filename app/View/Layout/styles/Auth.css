@@ -4,12 +4,17 @@ body {
     background-repeat: repeat-x;
 }
 
+.content-wrapper {
+    color: #fff;
+}
+
 .header h3 {
     color: #fff;
     margin: 30px;
 }
 
-@media (min-width: 640px) { /*save bandwidth on mobile devices*/
+@media (min-width: 640px) {
+    /*save bandwidth on mobile devices*/
     body {
         background: indigo url(/static/local/assets/images/background.jpg) no-repeat fixed center;
         background-size: cover;
