@@ -50,7 +50,8 @@
                         </div>
 
                         <div class="form-group text-collapsible">
-                            <button type="submit" class="btn btn-primary pull-right btn-block" ng-if="!data.isLoading">
+                            <button type="submit" class="btn btn-primary pull-right btn-block" ng-if="!data.isLoading"
+                                    ng-disabled="!((data.form.password.length >= 3) && (data.form.password === data.form.password2))">
                                 <span translate="">Update Password</span> <i class="fa fa-fw fa-angle-right"></i>
                             </button>
 

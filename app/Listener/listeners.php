@@ -1,12 +1,13 @@
 <?php
 
 /** @var Binding $binding */
+use Minute\Auth\CancelUserAccount;
 use Minute\Auth\CheckUserLogin;
 use Minute\Auth\RetrievePassword;
 use Minute\Auth\UpdateUserData;
-use Minute\Event\AdminEvent;
 use Minute\Event\Binding;
 use Minute\Event\TodoEvent;
+use Minute\Event\UserAccountCancelEvent;
 use Minute\Event\UserForgotPasswordEvent;
 use Minute\Event\UserLoginEvent;
 use Minute\Event\UserUpdateDataEvent;
@@ -17,7 +18,9 @@ $binding->addMultiple([
     //auth
     ['event' => UserLoginEvent::USER_LOGIN_AUTHENTICATE, 'handler' => [CheckUserLogin::class, 'authenticate']],
     ['event' => UserForgotPasswordEvent::USER_FORGOT_PASSWORD, 'handler' => [RetrievePassword::class, 'retrieve']],
+
     ['event' => UserUpdateDataEvent::USER_UPDATE_DATA, 'handler' => [UpdateUserData::class, 'update']],
+    ['event' => UserAccountCancelEvent::USER_CANCEL_ACCOUNT, 'handler' => [CancelUserAccount::class, 'cancel']],
 
     ['event' => "import.admin.menu.links", 'handler' => [AuthMenu::class, 'adminLinks']],
 
